@@ -1,0 +1,36 @@
+GOL CleanFountain:
+TSK Clean the cat's water fountain
+ALL Water. CleanEmptyFountain!
+
+GOL CleanEmptyFountain:
+TSK Re-assemble
+ALL WashedAssembly! CleanFilter!
+
+GOL WashedAssembly:
+TSK Wash assembly
+ALL Water. DirtyAssembly!
+
+GOL CleanFilter:
+TSK Check for filters
+ANY NewFilter! WashedFilter!
+
+GOL NewFilter:
+TSK Get a new filter from the box
+ALL @CatDrawr. FilterBox.
+
+GOL WashedFilter:
+TSK Wash filter
+TSK Order more
+ALL Water. DirtyFilter! PurchaseOrder.
+
+GOL DirtyFilter:
+TSK Extract filter
+ALL DirtyAssembly!
+
+GOL DirtyAssembly:
+TSK Dis-assemble
+ALL DirtyFountain!
+
+GOL DirtyFountain:
+TSK Empty the fountain
+ALL @Sink. DirtyFullFountain.

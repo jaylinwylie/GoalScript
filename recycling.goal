@@ -1,0 +1,14 @@
+GOAL ClearRecycling
+INCL AtHome EmptyRecyclingContainer
+
+GOAL EmptyRecyclingContainer
+INCL AtRecyclingDepot
+INCL FullRecyclingContainer
+INCL Garbage?
+INCL Litter?
+
+GOAL AtRecyclingDepot
+INCL Keys
+
+GOAL AtHome
+
