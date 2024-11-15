@@ -1,107 +1,117 @@
-import re
-from itertools import islice
+from asyncio import current_task
+from copy import copy
+from enum import Enum
 
-GOLSCRIPT_TOKENS = [
-        ('CALL_GOAL', r'GOL'),
-        ('CALL_TASK', r'TSK'),
-        ('REQUIRE_ALL', r'ALL'),
-        ('REQUIRE_ANY', r'ANY'),
-        ('REQUIREMENT_REFERENCE', r'(\w+)(?=\!)'),  # Words ending with '!'
-        ('REQUIREMENT', r'(\w+)(?=\.)'),  # Words ending with '.'
-        ('GOAL_NAME', r'\w+(?=:)\:'),  # Words ending with ':'
-        ('TASK_DETAIL', r'.+?(?=;)'),  # Any sequence ending with ';'
-]
-
-TOKENIZER_REGEX = re.compile('|'.join(f'(?P<{name}>{pattern})' for name, pattern in GOLSCRIPT_TOKENS))
+GOLSCRIPT = 'CleanFountain.golscript'
 
 
-def lexer(script: str) -> list[tuple[str, str | None]]:
-    token_list = []
-    for match in TOKENIZER_REGEX.finditer(script):
-        token_type = match.lastgroup
-        token_value = match.group(token_type).strip() if token_type else None
-        token_list.append((token_type, token_value))
-    return token_list
+class Keywords(Enum):
+    GOL = 'GOL'
+    TSK = 'TSK'
+    ALL = 'ALL'
+    ANY = 'ANY'
+    GOL_END = ':'
+    TSK_END = ';'
+    OPTIONAL = '?'
+    REFERENCE = '!'
+    NON_REFERENCE = '.'
+    SPACE = ' '
 
 
-def process_goal_token(_goals, tokens_iter):
-    goal_name = next(tokens_iter)[1]
-    _goals[goal_name] = {
-            'requirements'          : [],
-            'requirement_references': [],
-            'requirement_type'      : '',
-            'tasks'                 : []
-    }
-    return goal_name
+class Goal:
+    def __init__(self):
+        self.name: str | None = None
+        self.tasks: list = []
+        self.non_reference: list[str] = []
+        self.reference: list[Goal] = []
+        self.optional: list[Goal] = []
+        self.is_completed: bool = False
 
 
-def process_task_token(_goals, current_goal, tokens_iter):
-    task_detail = next(tokens_iter)[1]
-    _goals[current_goal]['tasks'].append(task_detail)
+class GolScriptParser:
+    def __init__(self):
+        self.goals: list[Goal] = []
+
+    def parse_script(self, golscript: str):
+        lines = golscript.splitlines()
+        line_numbers = reversed(range(len(lines)))
+        lines = reversed(lines)
+        pending_goal = Goal()
+
+        for line_number, line in zip(line_numbers, lines):
+            line = line.strip()
+            key_space_position = line.find(Keywords.SPACE.value)
+            code = line[:key_space_position]
+            value = line[key_space_position + 1:]
+
+            if code == Keywords.GOL.value:
+                goal_end_position = value.find(Keywords.GOL_END.value)
+                pending_goal.name = value[:goal_end_position]
+                self.goals.append(copy(pending_goal))
+                pending_goal = Goal()
+
+            if code == Keywords.TSK.value:
+                task_end_position = value.find(Keywords.TSK_END.value)
+                if task_end_position == -1:
+                    raise SyntaxError(f'Missing ; in TSK on line {line_number + 1}')
+
+                pending_goal.tasks.append(value[:task_end_position])
+
+            elif code == Keywords.ALL.value or code == Keywords.ANY.value:
+                values = value.split(Keywords.SPACE.value)
+                for value in values:
+                    if value.endswith(Keywords.NON_REFERENCE.value):
+                        pending_goal.non_reference.append(value[:-1])
+
+                    elif value.endswith(Keywords.REFERENCE.value):
+                        value = value[:-1]
+                        for goal in self.goals:
+                            if goal.name == value:
+                                pending_goal.reference.append(goal)
+
+                    elif value.endswith(Keywords.OPTIONAL.value):
+                        value = value[:-1]
+                        for goal in self.goals:
+                            if goal.name == value:
+                                pending_goal.optional.append(goal)
+
+                    else:
+                        raise f'Missing punctuation in ALL or ANY on line {line_number + 1}'
 
 
-def parse(tokens: list[tuple[str, str]]) -> dict[str, dict[str, list[str] | str]]:
-    _goals = {}
-    current_goal = None
-    tokens_iter = iter(tokens)
+golscript = GolScriptParser()
 
-    for token_type, token_value in tokens_iter:
-        if token_type == 'CALL_GOAL':
-            current_goal = process_goal_token(_goals, tokens_iter)
-        elif token_type == 'CALL_TASK' and current_goal:
-            process_task_token(_goals, current_goal, tokens_iter)
-        elif token_type in ['REQUIRE_ALL', 'REQUIRE_ANY'] and current_goal:
-            req_type = 'all' if token_type == 'REQUIRE_ALL' else 'any'
-            _goals[current_goal]['requirement_type'] = req_type
-            for token in tokens_iter:
-                if token[0] not in ['REQUIREMENT', 'REQUIREMENT_REFERENCE']:
-                    break
-                req_type_actual, req_detail = token
-                if req_type_actual == 'REQUIREMENT_REFERENCE':
-                    _goals[current_goal]['requirement_references'].append(req_detail)
-                else:
-                    _goals[current_goal]['requirements'].append(req_detail)
-        else:
-            continue
-
-    return _goals
+with open(GOLSCRIPT) as file:
+    golscript.parse_script(file.read())
 
 
-golscript_code = """
-GOL CleanFountain:  
-TSK Clean the cat's water fountain; 
-ALL Water. CleanEmptyFountain!  
-GOL CleanEmptyFountain:  
-TSK Re-assemble;  
-ALL WashedAssembly! CleanFilter!  
-GOL WashedAssembly:  
-TSK Wash assembly;  
-ALL Water. DirtyAssembly!  
-GOL CleanFilter:  
-TSK Check for filters;  
-ANY NewFilter! WashedFilter!  
-GOL NewFilter:  
-TSK Get a new filter from the box;  
-ALL AtCatDrawr. FilterBox.  
-GOL WashedFilter:  
-TSK Wash filter;  
-TSK Order more;  
-ALL Water. DirtyFilter! PurchaseOrder.  
-GOL DirtyFilter:  
-TSK Extract filter;  
-ALL DirtyAssembly!  
-GOL DirtyAssembly:  
-TSK Dis-assemble;  
-ALL DirtyFountain!  
-GOL DirtyFountain:  
-TSK Empty the fountain;  
-ALL AtSink. DirtyFullFountain.
-"""
+def goal_to_mermaid(goal: Goal, generated: set):
+    mermaid_str = []
+    if goal.name in generated:
+        return mermaid_str
+    generated.add(goal.name)
 
-tokens = lexer(golscript_code)
-goals = parse(tokens)
+    for non_ref in goal.non_reference:
+        mermaid_str.append(f"{non_ref} --> {goal.name}")
 
-import pprint
+    for ref in goal.reference:
+        mermaid_str.append(f"{ref.name} --> {goal.name}")
+        mermaid_str.extend(goal_to_mermaid(ref, generated))
 
-pp = pprint.PrettyPrinter(indent=2)
-pp.pprint(goals)
+    for opt in goal.optional:
+        mermaid_str.append(f"{opt.name} -.- {goal.name}")
+        mermaid_str.extend(goal_to_mermaid(opt, generated))
+
+    return mermaid_str
+
+
+def list_of_goals_to_mermaid(goals):
+    generated = set()
+    mermaid_diagram = ['graph TD']
+    for goal in goals:
+        mermaid_diagram.extend(goal_to_mermaid(goal, generated))
+    return "\n".join(mermaid_diagram)
+
+
+with open('diagram.md', 'w') as file:
+    file.write(f'```mermaid\n{list_of_goals_to_mermaid(golscript.goals)}\n```')
