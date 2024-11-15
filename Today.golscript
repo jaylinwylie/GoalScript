@@ -1,0 +1,40 @@
+GOL DayComplete:
+ALL Crib? CleanLaundry! DoneNightRoutine! PosessEstradiol! BOTW? Coding? Music?
+
+GOL CleanLaundry:
+TSK Dry;
+TSK Wash;
+ALL DirtyLaundry! LaundryRoom. Detergent. DryerSheets.
+
+GOL DirtyLaundry:
+TSK Collect Laundry;
+ALL Hamper!
+
+GOL Hamper:
+ALL Regulars. Delicates.
+
+GOL Crib:
+ALL Home.
+
+GOL DoneNightRoutine:
+TSK Eat;
+TSK Freshen Up;
+ALL Home. Shower? Dinner!
+
+GOL Dinner:
+TSK Heat;
+TSK Prep;
+ALL Home. Leftovers.
+
+GOL PosessEstradiol:
+TSK Pick up perscription;
+ALL Pharmacy.
+
+GOL BOTW:
+ALL Home.
+
+GOL Coding:
+ANY Home. Library.
+
+GOL Music:
+
