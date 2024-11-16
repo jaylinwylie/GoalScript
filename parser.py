@@ -15,6 +15,7 @@ class Keywords(Enum):
     REFERENCE = '!'
     NON_REFERENCE = '.'
     SPACE = ' '
+    CHECK = '/'
 
 
 class GolScriptParser:
@@ -34,6 +35,7 @@ class GolScriptParser:
             value = line[key_space_position + 1:]
 
             if code == Keywords.GOL.value:
+                pending_goal.is_completed = value.endswith(Keywords.CHECK.value)
                 goal_end_position = value.find(Keywords.GOL_END.value)
                 pending_goal.name = value[:goal_end_position]
                 self._goals.append(copy(pending_goal))

@@ -11,27 +11,25 @@ def goal_to_mermaid(goal: Goal, generated: set):
         task_name = goal.name + 'Tasks'
         task_str = "\n".join([task for task in goal.tasks])
         if goal.is_all:
-            mermaid_str.append(f'{task_name}[\\{task_str}/] ==> {goal.name}')
+            mermaid_str.append(f'{task_name}[[{task_str}]] ==> {goal.name}')
         else:
             mermaid_str.append(f'{task_name}{{{task_str}}} ==> {goal.name}')
 
     else:
         task_name = goal.name
         if goal.is_all:
-            mermaid_str.append(f'{task_name}[\\{goal.name}/]')
+            mermaid_str.append(f'{task_name}[{goal.name}]')
         else:
-            mermaid_str.append(f'{task_name}[/{goal.name}\\]')
+            mermaid_str.append(f'{task_name}{{{goal.name}}}')
 
     for non_ref in goal.non_reference:
         mermaid_str.append(f"{non_ref}(({non_ref})) ---> {task_name}")
 
     for ref in goal.reference:
         mermaid_str.append(f"{ref.name} --> {task_name}")
-        mermaid_str.extend(goal_to_mermaid(ref, generated))
 
     for opt in goal.optional:
         mermaid_str.append(f"{opt.name} -.-> {task_name}")
-        mermaid_str.extend(goal_to_mermaid(opt, generated))
 
     return mermaid_str
 
