@@ -1,17 +1,22 @@
+from pathlib import Path
+
 from gol import GolArray
 from mermaid_renderer import GolRenderer
 from golscript_parser import GolScriptParser
 
-GOLSCRIPT = 'Examples/EpisodeHandedOff.golscript'
+examples_path = Path('Examples')
 
-with open(GOLSCRIPT) as file:
-    golscript = file.read()
+for golscript_path in examples_path.glob('*.golscript'):
+    with open(golscript_path) as file:
+        golscript = file.read()
 
-parser = GolScriptParser()
-renderer = GolRenderer()
+    parser = GolScriptParser()
+    renderer = GolRenderer()
 
-gols: GolArray = parser.parse_script(golscript)
-mermaid_script = renderer.gols_to_mermaid(gols)
+    gols: GolArray = parser.parse_script(golscript)
+    mermaid_script = renderer.gols_to_mermaid(gols)
+    file_name = golscript_path.stem
 
-with open('diagram.md', 'w') as file:
-    file.write(mermaid_script)
+    diagram_path = examples_path / f'{file_name}.md'
+    with open(diagram_path, 'w') as file:
+        file.write(mermaid_script)
