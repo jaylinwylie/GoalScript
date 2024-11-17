@@ -1,13 +1,17 @@
-from goal import GoalArray
-from mermaid_renderer import list_of_goals_to_mermaid
-from parser import GolScriptParser
+from gol import GolArray
+from mermaid_renderer import GolRenderer
+from golscript_parser import GolScriptParser
 
-GOLSCRIPT = 'Today.golscript'
+GOLSCRIPT = 'Examples/EpisodeHandedOff.golscript'
 
 with open(GOLSCRIPT) as file:
     golscript = file.read()
 
-goals: GoalArray = GolScriptParser().parse_script(golscript)
+parser = GolScriptParser()
+renderer = GolRenderer()
+
+gols: GolArray = parser.parse_script(golscript)
+mermaid_script = renderer.gols_to_mermaid(gols)
 
 with open('diagram.md', 'w') as file:
-    file.write(f'```mermaid\n{list_of_goals_to_mermaid(goals)}\n```')
+    file.write(mermaid_script)
