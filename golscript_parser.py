@@ -1,7 +1,7 @@
 from copy import copy
 from enum import Enum
 
-from goal import Goal
+from gol import Gol
 
 
 class Keywords(Enum):
@@ -20,13 +20,13 @@ class Keywords(Enum):
 
 class GolScriptParser:
     def __init__(self):
-        self._goals: list[Goal] = []
+        self._goals: list[Gol] = []
 
     def parse_script(self, script: str):
         lines = script.splitlines()
         line_numbers = reversed(range(len(lines)))
         lines = reversed(lines)
-        pending_goal = Goal()
+        pending_goal = Gol()
 
         for line_number, line in zip(line_numbers, lines):
             line_number += 1
@@ -43,9 +43,9 @@ class GolScriptParser:
                 goal_end_position = value.find(Keywords.GOL_END.value)
                 pending_goal.name = value[:goal_end_position]
                 self._goals.append(copy(pending_goal))
-                pending_goal = Goal()
+                pending_goal = Gol()
 
-            if code == Keywords.TSK.value:
+            elif code == Keywords.TSK.value:
                 if Keywords.TSK_END.value not in value:
                     raise SyntaxError(f'Missing ; in TSK on line {line_number}')
 
@@ -73,5 +73,7 @@ class GolScriptParser:
 
                     else:
                         raise SyntaxError(f'Missing punctuation in {("ANY", "ALL")[int(pending_goal.is_all)]} on line {line_number}')
+            else:
+                raise SyntaxError(f'Unrecognized key {code} on line {line_number}')
 
         return self._goals
