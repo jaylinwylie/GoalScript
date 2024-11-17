@@ -1,6 +1,6 @@
 class Gol:
     def __init__(self):
-        self.is_all: bool | None = None
+        self.is_all: bool = True
         self.is_completed: bool = False
         self.name: str | None = None
         self.tasks: list = []
