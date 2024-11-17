@@ -9,13 +9,14 @@ class Keywords(Enum):
     TSK = 'TSK'
     ALL = 'ALL'
     ANY = 'ANY'
+    CHECK = '/'
     GOL_END = ':'
     TSK_END = ';'
     OPTIONAL = '?'
     REFERENCE = '!'
     NON_REFERENCE = '.'
     SPACE = ' '
-    CHECK = '/'
+    RETURN = '\n'
 
 
 class GolScriptParser:
@@ -73,7 +74,11 @@ class GolScriptParser:
 
                     else:
                         raise SyntaxError(f'Missing punctuation in {("ANY", "ALL")[int(pending_goal.is_all)]} on line {line_number}')
+
+            elif code == Keywords.RETURN.value or code == '' or None:
+                pass
+
             else:
-                raise SyntaxError(f'Unrecognized key {code} on line {line_number}')
+                raise SyntaxError(f'Unrecognized key "{code}" on line {line_number}')
 
         return self._goals
