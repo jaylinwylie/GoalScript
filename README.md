@@ -3,17 +3,11 @@
 ## GolScript Structure
 
 - **Goals (`GOL`)**: Define an overarching objective.
-  - `:` - Ends the goal line.
-  - `/` - Marks a goal as completed (✓).
-
 
 - **Tasks (`TSK`)**: Specific actions required to achieve a goal.
-  - `;` - Ends the task line.
 
-  
 - **Conditions**:
   - **`ALL`**: All listed sub-goals must be completed.
   - **`ANY`**: Any one of the listed sub-goals must be completed.
-    - `?` - Marks a goal or task as optional.
-    - `!` - Marks a reference to another goal.
-    - `.` - Marks a non-referencing sub-goal.
+    - `?` - Marks a condition as optional
+    - `!` - Marks a condition as critical.
