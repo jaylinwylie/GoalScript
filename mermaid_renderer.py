@@ -1,4 +1,5 @@
 from gol import Gol
+from golscript_parser import Keywords
 
 
 class GolRenderer:
@@ -14,9 +15,9 @@ class GolRenderer:
             task_name = gol.name + 'Tasks'
             task_str = "\n".join([task for task in gol.tasks])
             if gol.is_all:
-                mermaid_str.append(f'{task_name}[[{task_str}]] ==> {gol.name}')
+                mermaid_str.append(f'{task_name}[[{task_str}]] --> {gol.name}')
             else:
-                mermaid_str.append(f'{task_name}{{{task_str}}} ==> {gol.name}')
+                mermaid_str.append(f'{task_name}{{{task_str}}} --> {gol.name}')
 
         else:
             task_name = gol.name
@@ -25,12 +26,22 @@ class GolRenderer:
             else:
                 mermaid_str.append(f'{task_name}{{{gol.name}}}')
 
-        for non_ref in gol.non_reference:
-            mermaid_str.append(f"{non_ref}(({non_ref})) ---> {task_name}")
+        for non_ref, modifier in gol.non_reference:
+            arrow = '----'
+            if modifier == Keywords.CRITICAL.value:
+                arrow = '====='
+            elif modifier == Keywords.OPTIONAL.value:
+                arrow = '..-'
+            mermaid_str.append(f"{non_ref}(({non_ref})) {arrow} {task_name}")
 
-        for ref in gol.reference:
-            mermaid_str.append(f"{ref.name} --> {task_name}")
+        for ref, modifier in gol.reference:
+            arrow = '---'
+            if modifier == Keywords.CRITICAL.value:
+                arrow = '===='
+            elif modifier == Keywords.OPTIONAL.value:
+                arrow = '.-'
 
+            mermaid_str.append(f"{ref.name} {arrow} {task_name}")
 
         return mermaid_str
 
