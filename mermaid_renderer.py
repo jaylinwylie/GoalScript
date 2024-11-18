@@ -31,8 +31,6 @@ class GolRenderer:
         for ref in gol.reference:
             mermaid_str.append(f"{ref.name} --> {task_name}")
 
-        for opt in gol.optional:
-            mermaid_str.append(f"{opt.name} -.-> {task_name}")
 
         return mermaid_str
 

@@ -6,7 +6,6 @@ class Gol:
         self.tasks: list = []
         self.non_reference: list[str] = []
         self.reference: list[Gol] = []
-        self.optional: list[Gol] = []
 
 
 class GolArray(list):

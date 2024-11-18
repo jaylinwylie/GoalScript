@@ -50,9 +50,11 @@ class GolScriptParser:
                     found_link = False
                     for goal in self._goals:
                         if goal.name == sub_value:
+                            goal.optional = True if code == Keywords.OPTIONAL.value else False
                             pending_goal.reference.append(goal)
                             found_link = True
                             break
+
                     if not found_link:
                         pending_goal.non_reference.append(sub_value)
 
