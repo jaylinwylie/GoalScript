@@ -4,8 +4,8 @@ class Gol:
         self.is_completed: bool = False
         self.name: str | None = None
         self.tasks: list = []
-        self.non_reference: list[str] = []
-        self.reference: list[Gol] = []
+        self.non_reference: list[tuple[str, str]] = []
+        self.reference: list[tuple[Gol, str]] = []
 
 
 class GolArray(list):

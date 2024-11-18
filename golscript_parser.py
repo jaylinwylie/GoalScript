@@ -1,6 +1,5 @@
 from copy import copy
 from enum import Enum
-
 from gol import Gol
 
 
@@ -18,13 +17,13 @@ class Keywords(Enum):
 
 class GolScriptParser:
     def __init__(self):
-        self._goals: list[Gol] = []
+        self._gols: list[Gol] = []
 
     def parse_script(self, script: str):
         lines = script.splitlines()
         line_numbers = reversed(range(len(lines)))
         lines = reversed(lines)
-        pending_goal = Gol()
+        pending_gol = Gol()
 
         for line_number, line in zip(line_numbers, lines):
             line_number += 1
@@ -35,28 +34,36 @@ class GolScriptParser:
 
             if code == Keywords.GOL.value:
 
-                pending_goal.is_completed = value.endswith(Keywords.CHECK.value)
-                pending_goal.name = value
-                self._goals.append(copy(pending_goal))
-                pending_goal = Gol()
+                pending_gol.is_completed = value.endswith(Keywords.CHECK.value)
+                pending_gol.name = value
+                self._gols.append(copy(pending_gol))
+                pending_gol = Gol()
 
             elif code == Keywords.TSK.value:
-                pending_goal.tasks.append(value)
+                pending_gol.tasks.append(value)
 
             elif code == Keywords.ALL.value or code == Keywords.ANY.value:
-                pending_goal.is_all = True if code == Keywords.ALL.value else False
+                pending_gol.is_all = True if code == Keywords.ALL.value else False
 
                 for sub_value in value.split(Keywords.SPACE.value):
                     found_link = False
-                    for goal in self._goals:
-                        if goal.name == sub_value:
-                            goal.optional = True if code == Keywords.OPTIONAL.value else False
-                            pending_goal.reference.append(goal)
+                    modifier = ''
+
+                    if sub_value.endswith(Keywords.CRITICAL.value):
+                        sub_value = sub_value[:-1]
+                        modifier = Keywords.CRITICAL.value
+                    elif sub_value.endswith(Keywords.OPTIONAL.value):
+                        sub_value = sub_value[:-1]
+                        modifier = Keywords.OPTIONAL.value
+
+                    for gol in self._gols:
+                        if gol.name == sub_value:
+                            pending_gol.reference.append((gol, modifier))
                             found_link = True
                             break
 
                     if not found_link:
-                        pending_goal.non_reference.append(sub_value)
+                        pending_gol.non_reference.append((sub_value, modifier))
 
             elif code == Keywords.RETURN.value or code == '' or None:
                 pass
@@ -64,4 +71,4 @@ class GolScriptParser:
             else:
                 raise SyntaxError(f'Unrecognized key "{code}" on line {line_number}')
 
-        return self._goals
+        return self._gols
