@@ -2,11 +2,17 @@ class Gol:
     def __init__(self):
         self.is_all: bool = True
         self.is_completed: bool = False
+
         self.name: str | None = None
         self.tasks: list = []
-        self.non_reference: list[tuple[str, str]] = []
-        self.reference: list[tuple[Gol, str]] = []
 
+        self.leaf: set[str] = set()
+        self.critical_leaf: set[str] = set()
+        self.optional_leaf: set[str] = set()
+
+        self.branch: set[Gol] = set()
+        self.critical_branch: set[Gol] = set()
+        self.optional_branch: set[Gol] = set()
 
 class GolArray(list):
     def __init__(self, goals: list[Gol]):

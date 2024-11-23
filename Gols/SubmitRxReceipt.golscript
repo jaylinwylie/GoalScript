@@ -1,0 +1,25 @@
+GOL SubmitRxReceipt
+ALL LogInToMyBenefits. SubmitClaim!
+
+GOL SubmitClaim
+TSK Enter details
+TSK Service: Prescription Drug
+TSK Patient: Jaylin Wylie
+ALL ReceiptDate. ReceiptTotal! ReceiptPicture! LogInToMyBenefits.
+
+GOL ReceiptDate
+ALL Receipt.
+
+GOL ReceiptTotal
+ALL Receipt.
+
+GOL ReceiptPicture
+ALL Receipt. Camera.
+
+GOL Camera
+ANY Phone. Webcam.
+
+GOL LogInToMyBenefits
+TSK Pswrd: T********@
+TSK User: JAYLINW
+ALL App. https://www.my-benefits.ca/#/login!

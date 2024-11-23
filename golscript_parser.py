@@ -1,72 +1,92 @@
 from copy import copy
-from enum import Enum
+from enum import StrEnum
+from pathlib import Path
+
 from gol import Gol
 
 
-class Keywords(Enum):
+class Keywords(StrEnum):
     GOL = 'GOL'
+    GOAL = 'GOAL'
     TSK = 'TSK'
+    TASK = 'TASK'
+    SPACE = ' '
     ALL = 'ALL'
     ANY = 'ANY'
     CHECK = '/'
-    SPACE = ' '
+    SUB_GOL = '.'
     CRITICAL = '!'
     OPTIONAL = '?'
-    RETURN = '\n'
-
+    POINTER = '@'
 
 class GolScriptParser:
     def __init__(self):
         self._gols: list[Gol] = []
 
-    def parse_script(self, script: str):
-        lines = script.splitlines()
-        line_numbers = reversed(range(len(lines)))
-        lines = reversed(lines)
+    def parse_script(self, script_path):
+
+        with open(script_path) as golscript:
+            script = golscript.read()
+
+        lines = list(reversed(script.splitlines()))
+        line_numbers = reversed(range(1, len(lines) + 1))
         pending_gol = Gol()
 
         for line_number, line in zip(line_numbers, lines):
-            line_number += 1
             line = line.strip()
-            key_space_position = line.find(Keywords.SPACE.value)
-            code = line[:key_space_position]
-            value = line[key_space_position + 1:].strip()
 
-            if code == Keywords.GOL.value:
+            if len(line) == 0:
+                continue
 
-                pending_gol.is_completed = value.endswith(Keywords.CHECK.value)
+            code, value = tuple(line.split(Keywords.SPACE, 1))
+
+            if code == Keywords.GOL.value or code == Keywords.GOAL.value:
+                if value.endswith(Keywords.CHECK):
+                    pending_gol.is_completed = True
+                    value = value[:-1]
+                
                 pending_gol.name = value
                 self._gols.append(copy(pending_gol))
                 pending_gol = Gol()
 
-            elif code == Keywords.TSK.value:
+            elif code == Keywords.TSK.value or code == Keywords.TASK.value:
                 pending_gol.tasks.append(value)
 
-            elif code == Keywords.ALL.value or code == Keywords.ANY.value:
-                pending_gol.is_all = True if code == Keywords.ALL.value else False
+            elif code == Keywords.ALL or code == Keywords.ANY:
+                pending_gol.is_all = True if code == Keywords.ALL else False
 
-                for sub_value in value.split(Keywords.SPACE.value):
-                    found_link = False
-                    modifier = ''
+                for sub_gol_and_mod in value.split(Keywords.SPACE):
+                    sub_gol, mod = sub_gol_and_mod[:-1], sub_gol_and_mod[-1]
 
-                    if sub_value.endswith(Keywords.CRITICAL.value):
-                        sub_value = sub_value[:-1]
-                        modifier = Keywords.CRITICAL.value
-                    elif sub_value.endswith(Keywords.OPTIONAL.value):
-                        sub_value = sub_value[:-1]
-                        modifier = Keywords.OPTIONAL.value
+                    if sub_gol.startswith(Keywords.POINTER):
+                        sub_gol = sub_gol[1:]
+                        recursive_parser = GolScriptParser()
+                        folder = script_path.parent
+                        golscript = folder / f'{sub_gol}.golscript'
+                        self._gols.extend(recursive_parser.parse_script(golscript))
 
+                    is_leaf = True
                     for gol in self._gols:
-                        if gol.name == sub_value:
-                            pending_gol.reference.append((gol, modifier))
-                            found_link = True
+                        if gol.name == sub_gol:
+                            is_leaf = False
                             break
 
-                    if not found_link:
-                        pending_gol.non_reference.append((sub_value, modifier))
-
-            elif code == Keywords.RETURN.value or code == '' or None:
-                pass
+                    if is_leaf:
+                        match mod:
+                            case Keywords.SUB_GOL:
+                                pending_gol.leaf.add(sub_gol)
+                            case Keywords.CRITICAL:
+                                pending_gol.critical_leaf.add(sub_gol)
+                            case Keywords.OPTIONAL:
+                                pending_gol.optional_leaf.add(sub_gol)
+                    else:
+                        match mod:
+                            case Keywords.SUB_GOL:
+                                pending_gol.branch.add(gol)
+                            case Keywords.CRITICAL:
+                                pending_gol.critical_branch.add(gol)
+                            case Keywords.OPTIONAL:
+                                pending_gol.optional_branch.add(gol)
 
             else:
                 raise SyntaxError(f'Unrecognized key "{code}" on line {line_number}')
