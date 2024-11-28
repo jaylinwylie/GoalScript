@@ -47,6 +47,7 @@ class GolScriptParser:
 
             else:
                 code, value = tuple(line.split(Keywords.SPACE.value, 1))
+                code = code.upper()
 
                 if code == Keywords.GOL.value or code == Keywords.GOAL.value:
                     if value.endswith(Keywords.CHECK.value):
@@ -61,7 +62,7 @@ class GolScriptParser:
                     pending_gol.tasks.append(value)
 
                 elif code == Keywords.ALL.value or code == Keywords.ANY.value:
-                    pending_gol.is_all = True if code == Keywords.ALL else False
+                    pending_gol.is_all = True if code == Keywords.ALL.value else False
 
                     for sub_gol_and_mod in value.split(Keywords.SPACE.value):
                         sub_gol, mod = sub_gol_and_mod[:-1], sub_gol_and_mod[-1]

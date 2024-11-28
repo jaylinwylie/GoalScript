@@ -32,14 +32,14 @@ def render(_):
             gols = parser.parse_script(golscript)
             mermaid_diagram = renderer.gols_to_mermaid(gols)
             last_good_render = mermaid_diagram
-        except Exception as e:
-            logging.warning(e)
-            mermaid_diagram = last_good_render
-        finally:
             output_area.clear_output()
             display(Markdown(mermaid_diagram))
+        except Exception as e:
+            pass
+            mermaid_diagram = last_good_render
+
 
 
 code_input.observe(render)
 
-display(output_area, code_input)
+display(code_input, output_area)
