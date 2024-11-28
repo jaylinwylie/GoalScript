@@ -10,7 +10,8 @@ renderer = GolRenderer()
 
 folder = Path('Gols')
 
-gols: GolArray = parser.parse_script(folder / 'END.golscript')
+gols: GolArray = parser.parse_script('@END')
+...
 mermaid_script = renderer.gols_to_mermaid(gols)
 
 diagram_path = folder / 'diagram.md'
