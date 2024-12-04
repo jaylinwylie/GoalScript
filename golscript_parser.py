@@ -21,7 +21,7 @@ class Keywords(Enum):
 
 class GolScriptParser:
     def __init__(self):
-        self._gols: list[Gol] = []
+        self.gols: list[Gol] = []
 
     def parse_script(self, script):
         lines = list(reversed(script.splitlines()))
@@ -37,12 +37,12 @@ class GolScriptParser:
             if line.startswith(Keywords.POINTER.value):
                 value = line[1:]
                 recursive_parser = GolScriptParser()
-                golscript = f'Gols/{value}.golscript'
+                golscript = f'gols/{value}.golscript'
 
                 with open(golscript) as file:
                     new_script = file.read()
 
-                self._gols.extend(recursive_parser.parse_script(new_script))
+                self.gols.extend(recursive_parser.parse_script(new_script))
                 continue
 
             else:
@@ -55,7 +55,7 @@ class GolScriptParser:
                         value = value[:-1]
 
                     pending_gol.name = value
-                    self._gols.append(copy(pending_gol))
+                    self.gols.append(copy(pending_gol))
                     pending_gol = Gol()
 
                 elif code == Keywords.TSK.value or code == Keywords.TASK.value:
@@ -70,16 +70,17 @@ class GolScriptParser:
                         if sub_gol.startswith(Keywords.POINTER.value):
                             sub_gol = sub_gol[1:]
                             recursive_parser = GolScriptParser()
-                            golscript = f'Gols/{sub_gol}.golscript'
-
+                            golscript = f'gols/{sub_gol}.golscript'
+                            if '/' in sub_gol:
+                                sub_gol = sub_gol.split('/')[-1]
                             with open(golscript) as file:
                                 new_script = file.read()
 
-                            self._gols.extend(recursive_parser.parse_script(new_script))
+                            self.gols.extend(recursive_parser.parse_script(new_script))
 
                         is_leaf = True
                         pointed_gol = None
-                        for gol in self._gols:
+                        for gol in self.gols:
                             if gol.name == sub_gol:
                                 is_leaf = False
                                 pointed_gol = gol
@@ -105,4 +106,4 @@ class GolScriptParser:
                 else:
                     raise SyntaxError(f'Unrecognized key "{code}" on line {line_number}')
 
-        return self._gols
+        return self.gols

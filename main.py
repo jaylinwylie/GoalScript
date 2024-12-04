@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from gol import GolArray
+from gol import Gol
 from mermaid_renderer import GolRenderer
 from golscript_parser import GolScriptParser
 
@@ -8,9 +8,9 @@ from golscript_parser import GolScriptParser
 parser = GolScriptParser()
 renderer = GolRenderer()
 
-folder = Path('Gols')
+folder = Path('gols')
 
-gols: GolArray = parser.parse_script('@END')
+gols: list[Gol] = parser.parse_script('@END')
 ...
 mermaid_script = renderer.gols_to_mermaid(gols)
 

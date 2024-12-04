@@ -1,0 +1,25 @@
+GOL submit_rx_receipt
+ALL log_in_to_my_benefits. submit_claim!
+
+GOL submit_claim
+TSK enter_details
+TSK service: prescription_drug
+TSK patient: jaylin_wylie
+ALL receipt_date. receipt_total! receipt_picture! log_in_to_my_benefits.
+
+GOL receipt_date
+ALL receipt.
+
+GOL receipt_total
+ALL receipt.
+
+GOL receipt_picture
+ALL receipt. camera.
+
+GOL camera
+ANY phone. webcam.
+
+GOL log_in_to_my_benefits
+TSK pswrd: T********@
+TSK user: JAYLINW
+ALL app. https://www.my-benefits.ca/#/login!

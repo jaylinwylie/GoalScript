@@ -14,6 +14,3 @@ class Gol:
         self.critical_branch: set[Gol] = set()
         self.optional_branch: set[Gol] = set()
 
-class GolArray(list):
-    def __init__(self, goals: list[Gol]):
-        super().__init__(goals)
